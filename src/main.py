@@ -1,5 +1,4 @@
 import os
-import sys
 from dotenv import load_dotenv
 
 import asyncio
@@ -11,7 +10,7 @@ from discord.ext.commands.context import Context
 from datetime import datetime, timezone
 import pytz
 
-from routine_order import *
+from config import *
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -47,21 +46,23 @@ async def clear(ctx: Context, confirm=None, limit=-1):
         await after_msg.delete()
 
 @bot.command(name="create_routine_order", help="Uses a template to fill in a routine order", aliases=["cro", "create_ro"])
-async def create_ro(ctx: Context):
-    info = {}
-    
+async def create_ro(ctx: Context):    
     # Query for dates and times
-    dates = await config_date(ctx)
-    info = dates
+    res = await config_date(ctx=ctx)
+    info = res
     
     # Query for groups involved 
-    groups = await config_groups(ctx)
-    info["groups"] = groups
+    res = await config_groups(ctx=ctx, info=info)
+    info = dict(info, **res)
 
     # Query for attire 
-    attire = await config_attire(ctx, info)
-    info = dict(info, **attire)
+    res = await config_attire(ctx=ctx, info=info)
+    info = dict(info, **res)
 
-    await ctx.send(f"LETS GO THIS SHIT WORKS : \n{info}")
+    # Query for venue
+    res = await config_venue(ctx=ctx, info=info)
+    info = dict(info, **res)    
+
+    await ctx.send(f"LETS GO THIS SHIT WORKS : \n`{info}`")
 
 bot.run(TOKEN)
